@@ -19,7 +19,7 @@ from datetime import datetime
 HOST = "irc.darkmyst.org"
 PORT = 6697
 
-NICK = "Weaver_Ascendant"
+NICK = "WeaverAscendant"
 IDENT = "Weaver Ascendant"
 REALNAME = "Weaver Ascendant"
 MASTER = "Seraphim"
@@ -39,12 +39,17 @@ s.send(bytes("JOIN #Walhalla:Dice \r\n", "UTF-8"))
 
              
 def sendMessage(origin, message1, message2, message3):
-    s.send(bytes("PRIVMSG " + origin + " :" + message1 + "\r\n", "UTF-8"))
-    if message2 != '':
-        s.send(bytes("PRIVMSG " + origin + " :" + message2 + "\r\n", "UTF-8"))
-    if message3 != '':
-        s.send(bytes("PRIVMSG " + origin + " :" + message3 + "\r\n", "UTF-8"))
+    try:
+        s.send(bytes("PRIVMSG " + origin + " :" + message1 + "\r\n", "UTF-8"))
+        if message2 != '':
+            s.send(bytes("PRIVMSG " + origin + " :" + message2 + "\r\n", "UTF-8"))
+        if message3 != '':
+            s.send(bytes("PRIVMSG " + origin + " :" + message3 + "\r\n", "UTF-8"))
+    except Exception as e:
+        print("sendMessage Exception: " + str(e))
+        return
     return
+
 
 #Rolls dice, a cat could read this part
 def WoDDice(numDice, difficulty, willpower):
@@ -77,60 +82,66 @@ def WoDDice(numDice, difficulty, willpower):
         diceList.sort(reverse=True)
         successes = successes+int(willpower)
         return total, botch, successes, ten, diceList
-    except ValueError:
+    except Exception as e:
+        print("WoDDice Exception: " + str(e))
         return
 
 #Extract the information we want from each line
 def getDiceFields(line):
-    reason = ''
-    numDice = 0
-    difficulty = 0
-    willpower = 0
-
     try:
-        #WP will be in index 6, make it lower case and check if it matches the regex or not
-        willpowerCheck = line[6].lower()
-        if re.compile("^\+?wp$|^1$").match(willpowerCheck): 
-            willpower = 1
-            try:
-                #If the WP is in index 6, the user reason is line 7 and greater
-                reason = ' '.join(line[7:])
-                if(reason != '' and reason != ' '):
-                    reason = "Reason: " + reason
-            except ValueError:
-                reason = ''
-            except IndexError:
-                reason = ''
-        else:
-            try:
-                #If WP isn't in index 6, the reason is
-                reason = ' '.join(line[6:])
-                if(reason != '' and reason != ' '):
-                    reason = 'Reason: ' + reason
-                    print(reason)
-            except IndexError:
-                reason = ''
-    except IndexError:
+        reason = ''
+        numDice = 0
+        difficulty = 0
         willpower = 0
-
-    numDice = line[4] #Extracts dice and difficulty
-    difficulty = line[5]
-
+    
+        try:
+            #WP will be in index 6, make it lower case and check if it matches the regex or not
+            willpowerCheck = line[6].lower()
+            if re.compile("^\+?wp$|^1$").match(willpowerCheck): 
+                willpower = 1
+                try:
+                    #If the WP is in index 6, the user reason is line 7 and greater
+                    reason = ' '.join(line[7:])
+                    if(reason != '' and reason != ' '):
+                        reason = "Reason: " + reason
+                except ValueError:
+                    reason = ''
+                except IndexError:
+                    reason = ''
+            else:
+                try:
+                    #If WP isn't in index 6, the reason is
+                    reason = ' '.join(line[6:])
+                    if(reason != '' and reason != ' '):
+                        reason = 'Reason: ' + reason
+                        print(reason)
+                except IndexError:
+                    reason = ''
+        except IndexError:
+            willpower = 0
+    
+        numDice = line[4] #Extracts dice and difficulty
+        difficulty = line[5]
+    except Exception as e:
+        print("getDiceFields Exception: " + str(e))
     return willpower, numDice, difficulty, reason
 
 def rollDice(numDice, dSides):
-    rolls = 0
-    total = 0
-    diceList = []
-    
-    while int(numDice) > rolls:
-        rolls += 1
-        check = random.randint(1, int(dSides))
-        total += check
-        diceList.append(check)
+    try:
+        rolls = 0
+        total = 0
+        diceList = []
         
+        while int(numDice) > rolls:
+            rolls += 1
+            check = random.randint(1, int(dSides))
+            total += check
+            diceList.append(check)
+    except Exception as e:
+        print("rollDice Exception: " + str(e))
+        return
     return diceList, total
-    
+
 def WoD(line):
     try:
         #Make index 3 lowercase, check if it is equal to !wod
@@ -180,19 +191,21 @@ def WoD(line):
             sendMessage(origin, message1, message2, message3)
             return
     #Don't allow an error to cause the entire program to fail, print nothing and return instead
-    except:
+    except Exception as e:
+        print("WoD Exception: " + str(e))
         return
 
 def dSidedDice(line):
-    sender = line[0] #First extract index 0 of the list
-    sender = sender[1:sender.find("!")] #Then extract from index 1 until the first ! from the string
-    origin = line[2] #Extract channel
-    send = 0
-    numDice = 1
-    dSides = 0
-    diceSplit = line[4].split("d")
-    dSides = diceSplit[1]
     try:
+        sender = line[0] #First extract index 0 of the list
+        sender = sender[1:sender.find("!")] #Then extract from index 1 until the first ! from the string
+        origin = line[2] #Extract channel
+        send = 0
+        numDice = 1
+        dSides = 0
+        diceSplit = line[4].split("d")
+        dSides = diceSplit[1]
+    
         if diceSplit[0] == '':
             diceList, total = rollDice(numDice, dSides)
             send = 1
@@ -213,7 +226,7 @@ def dSidedDice(line):
             
             sendMessage(origin, message1, message2, '')
     except Exception as e:
-       print("Excepted: " + e)
+       print("dSidedDice Exception: " + e)
        return
     return
 
@@ -247,6 +260,7 @@ def init(line):
         return
     return
 
+
 def main():
     readbuffer = ""
     s.settimeout(200)
@@ -263,9 +277,8 @@ def main():
                 #If we see 376 in a line, this means the server has been joined successfully. 
                 if "376" in line:
                     #Therefore we can now join a room
-                    #s.send(bytes("JOIN #Walhalla:Dice \r\n", "UTF-8"))
-                    #s.send(bytes("JOIN #FOI.Dice \r\n", "UTF-8"))
-                    s.send(bytes("JOIN #BotTestRoom \r\n", "UTF-8"))
+                    s.send(bytes("JOIN #Walhalla:Dice \r\n", "UTF-8"))
+                    s.send(bytes("JOIN #FOI.Dice \r\n", "UTF-8"))
                     #s.send(bytes("PRIVMSG #BotTestRoom :I like pancakes\r\n", "UTF-8"))
                 print(str(datetime.now())[11:17] + line)
                 #Strip unncecessary space, and split apart into a list with each index containing a string delimited by spaces
@@ -278,7 +291,6 @@ def main():
                 
                 WoD(line)
                 try:
-                    print(line)
                     if re.compile("^:!roll").match(line[3]) and re.compile("^[1-9]*[dD][1-9][0-9]*").match(line[4]):
                         dSidedDice(line)
                     if "!init" in line[3]:   
