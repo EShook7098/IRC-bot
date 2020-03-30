@@ -1,18 +1,100 @@
 All bot functions begin with "!"
 Mandatory fields are enclosed [field]
 Optional fields are enclosed [/field]
+Integer values are described as ##
+
 ---------------------Dice Rolling---------------------
 World of Darkness Dice:
   [command]         !wod
   [number of dice]  ## 
   [difficulty]      ##
   [/willpower]      wp, +wp, or 1
-  [/Reason for the roll] Anything can follow here
+  [/reason for the roll] Anything after difficulty or willpower is automatically added here
   
   Example 1: 5 dice at difficulty six with willpower to make a claw attack
   > !wod 5 6 +wp Claw Attack
   
   Example 2: 10 dice at difficulty 4, no willpower or reason given
   > !wod 10 4
+  
+  Example 3: 10 dice at difficulty 4 to make a claw attack
+  > !wod 10 4 Claw Attack
+  
+  
+  
+World of Darkness Initative:
+  [command]         !init
+  [modifier]        ## as Dexterity + Wits + All other modifiers
+  or
+  [command]         !init
+  [dexterity]       ##
+  [wits]            ##
+  
+  Example 1: Initative roll with 5 dexterity, 3 wits
+  > !init 8
+  or
+  > !init 5 3
+  
+  Example 2: Initiative roll with 5 dexterity, 3 wits, and +10 from Spirit of the Fray
+  > !init 18
+  
+D-Sided Dice:
+  [command]         !roll 
+  [/number of dice] ##
+  [dice]            d
+  [number of sides] ##
+  
+  Example 1: Rolling a 100 sided die (d100)
+  > !roll d100
+  > !roll 1d100
+  
+  Example 2: Rolling two 8 sided dice (2d8)
+  > !roll 2d8
+  
+---------------------Events, Player Commands---------------------
+All players can access two commands in their respective out of character rooms.
+Note: These can be called only in your game's room, calling them elsewhere will not work.
+  
+List of All Events:
+  [command]           !foi or !sanctum or !walhalla
+  Calls up a list of all events set for the respective channel with date, time, and the name of the event.
+
+  Example:
+  > !sanctum
+  WeaverAscendant: 
+  > Events for channel: All times CST
+  > 3/31 8:00 PM | Example Event
+    4/5 10:00 AM | Example Event 2: Electric Boogaloo
+ 
+ Next Two Events:
+  [command]            !events
+  Calls up a list of the next two upcoming events set for the channel it is called in.
+  Provides more detail on these two events, adding information on the type of event and an option to link it to a forums or facebook page
+  
+  Example:
+  > !events
+  WeaverAscendant:
+  Next two events: All times CST
+  ---------------------------------------
+  Example Event
+  3/31 | 8:00 PM
+  Exploration
+  http://exampleLink.net
+  ---------------------------------------
+  Example Event 2: Electric Boogaloo
+  4/5 | 10:00 AM
+  Combat
+  www.exampleLink.com
+  ---------------------------------------
+  
+ 
+
+  
+  
+  
+  
+ 
+  
+  
   
     
