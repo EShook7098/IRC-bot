@@ -1,0 +1,18 @@
+All bot functions begin with "!"
+Mandatory fields are enclosed [field]
+Optional fields are enclosed [/field]
+---------------------Dice Rolling---------------------
+World of Darkness Dice:
+  [command]         !wod
+  [number of dice]  ## 
+  [difficulty]      ##
+  [/willpower]      wp, +wp, or 1
+  [/Reason for the roll] Anything can follow here
+  
+  Example 1: 5 dice at difficulty six with willpower to make a claw attack
+  > !wod 5 6 +wp Claw Attack
+  
+  Example 2: 10 dice at difficulty 4, no willpower or reason given
+  > !wod 10 4
+  
+    
