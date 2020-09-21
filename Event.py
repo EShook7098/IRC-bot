@@ -13,6 +13,16 @@ class Event:
     #Thing to think on and maybe implement
     #attrs.org, marshmellow
     def __init__(self, date, time, name, type, link):
+        
+        dateFix = str.split(date, "/")
+        month = dateFix[0]
+        day = dateFix[1]
+        if(month[0] == "0"):
+            month = month[1]
+        if(day[0] == "0"):
+            day = day[1]
+        date = month + '/' + day
+        
         self.key = name
         self.date = date
         self.time = time
@@ -23,7 +33,6 @@ class Event:
         
     
     def setEventdate(self, date):
-        print("Second object reference at line 24" + self)
         self.date = date
         self.dateTime = date + " " + self.time
         
@@ -43,18 +52,21 @@ class Event:
     def setEventDateTime(self, date, time):
         self.dateTime = date + " " + time
   
+#End Event Object definition
+  
 def setOrigin(origin):
     origin = origin[1:].lower()
-    if origin == "walhalla:st":
-        return "Walhalla:ooc"
-    elif origin == "foi.st":
-        return "Fate.of.illusions"
-    elif origin == "sanctum-overlords":
-        return "Sanctum-ooc"
+    if origin in ("walhalla:st", "walhalla:ooc"):
+        return "walhalla"
+    elif origin in ("foi.st", "fate.of.illusions"):
+        return "fate"
+    elif origin in ("sanctum:overlords", "sanctum-ooc"):
+        return "sanctum"
     elif origin == "bottestroom":
         return "BotTestRoom"
     else:
         return False
+    
     
 def createEvent(origin, input):
     origin = setOrigin(origin)
@@ -75,14 +87,20 @@ def createEvent(origin, input):
         inputParse[listPosition] = string   
         listPosition += 1
     
+    if(len(inputParse[0]) > 5):
+        return False, "Invalid date format. Please enter as m/d, m/dd,or as mm/dd."
     event = Event(inputParse[0],inputParse[1],inputParse[2],inputParse[3],inputParse[4])
     storeData(origin, event)
-    return True
+    return True, ""
             
 def storeData(origin, event):
     #We need to serialize the object and still be able to access the attributes when read back
     #Therefore, we are using pickle/shelve to serialize on store and deserialize on read 
-    eventFile = shelve.open(origin) 
+    eventFile = shelve.open(origin, "c") 
+    print("Origin: " + origin)
+    print("Event Key: " + event.key)
+    print("Event: " + str(event))
+    print(eventFile)
     try:
         eventFile[event.key] = event
     except KeyError as e:
@@ -146,7 +164,7 @@ def editData(origin, editType, changeKey, change):
 def deleteData(origin, deletionKey):
     try:
         origin = setOrigin(origin)
-        eventData = shelve.open(origin)
+        eventData = shelve.open(origin, "w")
         myKeys = list(eventData.keys())
         eventFound = False
         
@@ -165,46 +183,52 @@ def deleteData(origin, deletionKey):
     
 def loadData(origin, line):
     try:
-        #command = line[3]
-        #command = command[2:].lower()
-        #print(command)
-        print(origin)
-        eventData = shelve.open(origin[1:])
-        print(eventData)
-        #data = pickle.load(eventFile)
-        myKeys = list(eventData.keys())
+        origin = setOrigin(origin)
+        eventData = shelve.open(origin, "r")
+        
+        myKeys = list(eventData.keys()) #Sticky issue here
         print(myKeys)
         displayList = []
         eventLength = 0
         
-        yearCheck = str(datetime.now())[5:7]
-        print(eventData)
+        currentMonth = str(datetime.now())[5:7]
         for key in myKeys:
             
             #--Handle automatic deletion on event expiration--------------------
             expirationObject = ""        
             currentTime = datetime.now()
             try:
-                if (int(yearCheck) <= int(eventData[key].dateTime.rsplit('/', 1)[0])) == True:
+                #print("Check: " + str(yearCheck) + " versus Event Date: " + str(eventData[key].dateTime.rsplit('/', 1)[0])) #Shows we have an issue with 09 versus 9
+                #if (yearCheck[0] == "0"):
+                 #   yearCheck = yearCheck[1]
+                #if (ye) == True:
+                #    year = str(currentTime.year)
+                #else: 
+                  #  year = str(currentTime.year + 1)
+                if (int(currentMonth) == 12): #If not december
+                    year = str(currentTime.year + 1) #This needs to change to be handled in the CREATE EVENT
+                else:
                     year = str(currentTime.year)
-                else: 
-                    year = str(currentTime.year + 1)
+                 
                 expirationObject = datetime.strptime(eventData[key].dateTime + " " + year, "%m/%d %I:%M %p %Y")
             except ValueError:
                 try:
                     expirationObject = datetime.strptime(eventData[key].dateTime + " " + year, "%m/%d %I:%M%p %Y")
                 except:
+                    print("Date Setting Excepted.")
                     continue
+                    
                 
             expirationTime = dt.datetime(expirationObject.year, expirationObject.month, expirationObject.day, expirationObject.hour, expirationObject.minute, 00, 000000)
-            
+            print("Expiration time: " + str(expirationTime))
+            print("Current time: " + str(currentTime))
             if expirationTime < currentTime:
                 print(key + " deleted")
                 del eventData[key]
                 continue
            
             #--Handle rest of the loading proceedure if an event or two are not deleted-----
-            
+            print(key)
             data = eventData[key]
             displayList.append(data)
             eventLength += 1
@@ -218,5 +242,5 @@ def loadData(origin, line):
         eventData.close()
         traceback.print_tb(e.__traceback__)
         return []
-    
+        
     return sortedList
